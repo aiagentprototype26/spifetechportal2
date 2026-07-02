@@ -16,6 +16,14 @@ exports.handler = async function (event) {
 
     const siteUrl = process.env.URL || "https://techportalspife.netlify.app";
 
+    // TEMPORARY: using WhatsApp sandbox while A2P 10DLC SMS registration is pending.
+    // Once A2P is approved, delete the two "whatsapp:" prefixes below and change
+    // fromNumber back to process.env.TWILIO_PHONE_NUMBER to switch back to regular SMS.
+    const useWhatsApp = true;
+    const sandboxNumber = "+14155238886";
+    const fromNumber = useWhatsApp ? `whatsapp:${sandboxNumber}` : process.env.TWILIO_PHONE_NUMBER;
+    const toNumber = useWhatsApp ? `whatsapp:${techPhone}` : techPhone;
+
     const message = await client.messages.create({
       body:
         `Spife Clean: New job for you, ${techName || "there"}!\n` +
@@ -23,8 +31,8 @@ exports.handler = async function (event) {
         `${date || ""} ${time || ""}\n` +
         `${address || ""}\n` +
         `Open the app to accept: ${siteUrl}`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: techPhone,
+      from: fromNumber,
+      to: toNumber,
     });
 
     return {

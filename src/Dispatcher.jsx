@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
+import logo from "./assets/logo.jpg";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, doc } from "firebase/firestore";
 import ServiceSelector from "./ServiceSelector";
 import { SERVICE_CATEGORIES } from "./services";
@@ -29,6 +30,7 @@ const EMPTY_TECH_FORM = {
 
 function Badge({ status }) {
   const map = {
+    Requested: "bg-slate-100 text-slate-600 border border-slate-200",
     Offered: "bg-amber-100 text-amber-700 border border-amber-200",
     Accepted: "bg-blue-100 text-blue-700 border border-blue-200",
     "En Route": "bg-blue-100 text-blue-700 border border-blue-200",
@@ -302,6 +304,83 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
 }
 
 // ============================================================
+// ASSIGN & PRICE MODAL — for customer-submitted booking requests
+// ============================================================
+
+function AssignRequestModal({ job, technicians, onClose, onAssign, assigning }) {
+  const [selectedTechId, setSelectedTechId] = useState("");
+  const [price, setPrice] = useState("");
+  const [error, setError] = useState("");
+
+  const serviceName = job.serviceType && job.serviceType.includes(" > ") ? job.serviceType.split(" > ")[1] : job.serviceType;
+  const qualifiedTechs = technicians.filter((t) => (t.services || []).includes(job.serviceType));
+  const otherTechs = technicians.filter((t) => !(t.services || []).includes(job.serviceType));
+
+  const handleSubmit = () => {
+    if (!selectedTechId) return setError("Select a technician");
+    if (!price || isNaN(price)) return setError("Enter a valid price");
+    setError("");
+    const tech = technicians.find((t) => t.id === selectedTechId);
+    onAssign(job, tech, parseFloat(price));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold text-lg">Assign & Price Request</h2>
+            <button onClick={onClose} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm">✕</button>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-5 space-y-4">
+          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-1.5 text-sm">
+            <p className="font-semibold text-slate-800">{job.customerName}</p>
+            <p className="text-slate-500 text-xs">{job.address}</p>
+            <p className="text-slate-500 text-xs">{job.date} at {job.time} · {job.duration}</p>
+            <p className="text-slate-700 text-xs font-semibold">{serviceName}</p>
+            {job.description && <p className="text-slate-500 text-xs pt-1 border-t border-slate-200 mt-2">{job.description}</p>}
+          </div>
+
+          <Field label="Assign To">
+            <select value={selectedTechId} onChange={(e) => setSelectedTechId(e.target.value)} className={inputCls()}>
+              <option value="">Select a technician…</option>
+              {qualifiedTechs.length > 0 && (
+                <optgroup label={`Offers ${serviceName}`}>
+                  {qualifiedTechs.map((t) => (
+                    <option key={t.id} value={t.id}>{t.firstName} {t.lastName} — {t.phone}</option>
+                  ))}
+                </optgroup>
+              )}
+              {otherTechs.length > 0 && (
+                <optgroup label="Other technicians">
+                  {otherTechs.map((t) => (
+                    <option key={t.id} value={t.id}>{t.firstName} {t.lastName} — {t.phone}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          </Field>
+
+          <Field label="Price to Charge Customer ($)">
+            <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" min="0" placeholder="120" className={inputCls()} />
+          </Field>
+
+          {error && <p className="text-red-500 text-xs">{error}</p>}
+        </div>
+
+        <div className="p-5 border-t border-slate-100 flex-shrink-0">
+          <button onClick={handleSubmit} disabled={assigning} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all">
+            {assigning ? "Assigning…" : "🚀 Assign & Notify Technician"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // TECHNICIAN MANAGEMENT
 // ============================================================
 
@@ -407,6 +486,8 @@ export default function Dispatcher() {
   const [toast, setToast] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [sending, setSending] = useState(false);
+  const [assigningJob, setAssigningJob] = useState(null);
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     const unsubTechs = onSnapshot(collection(db, "technicians"), (snap) => {
@@ -492,6 +573,44 @@ export default function Dispatcher() {
     setSending(false);
   };
 
+  const handleAssignRequest = async (job, tech, price) => {
+    if (!tech) return;
+    setAssigning(true);
+    try {
+      await updateDoc(doc(db, "jobs", job.id), {
+        technicianId: tech.id,
+        payout: price,
+        status: "Offered",
+      });
+
+      const res = await fetch("/.netlify/functions/send-job-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          techPhone: tech.phone,
+          techName: tech.firstName,
+          jobId: job.id,
+          address: job.address,
+          date: job.date,
+          time: job.time,
+          serviceType: job.serviceType,
+          payout: price,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(`Assigned, but notification failed to send: ${err.error || res.statusText}`, "error");
+      } else {
+        showToast(`Assigned to ${tech.firstName} and notified.`);
+      }
+      setAssigningJob(null);
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+    setAssigning(false);
+  };
+
   const jobsCompletedFor = (techId) => jobs.filter((j) => j.technicianId === techId && j.status === "Completed").length;
 
   const stats = {
@@ -503,7 +622,7 @@ export default function Dispatcher() {
   };
 
   const filteredJobs = filterStatus === "all" ? jobs : jobs.filter((j) => j.status === filterStatus);
-  const allStatuses = ["Offered", ...STATUS_FLOW, "Declined"];
+  const allStatuses = ["Requested", "Offered", ...STATUS_FLOW, "Declined"];
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: "⊞" },
@@ -517,7 +636,7 @@ export default function Dispatcher() {
 
       <header className="bg-white border-b border-slate-100 px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-2.5">
-          <span className="text-xl">🧹</span>
+          <img src={logo} alt="Spife Clean" className="h-7 w-7 rounded-lg object-cover" />
           <div>
             <span className="font-bold text-slate-800 text-base tracking-tight">Spife Clean</span>
             <span className="ml-2 text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Dispatcher</span>
@@ -553,6 +672,35 @@ export default function Dispatcher() {
               <StatCard label="Active Jobs" value={stats.active} icon="🔵" sub="in progress" color="text-blue-600" />
               <StatCard label="Revenue Paid" value={`$${stats.revenue.toFixed(0)}`} icon="💰" sub="completed jobs" color="text-emerald-600" />
             </div>
+
+            {jobs.filter((j) => j.status === "Requested").length > 0 && (
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-blue-100">
+                  <p className="font-bold text-blue-800 text-sm">
+                    🆕 {jobs.filter((j) => j.status === "Requested").length} new booking request{jobs.filter((j) => j.status === "Requested").length !== 1 ? "s" : ""}
+                  </p>
+                  <p className="text-blue-600 text-xs mt-0.5">Submitted by customers through the booking app — set a price and assign a technician.</p>
+                </div>
+                {jobs.filter((j) => j.status === "Requested").map((job, i, arr) => {
+                  const serviceName = job.serviceType && job.serviceType.includes(" > ") ? job.serviceType.split(" > ")[1] : job.serviceType;
+                  return (
+                    <div key={job.id} className={`flex items-center gap-4 p-4 ${i !== arr.length - 1 ? "border-b border-blue-100" : ""}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-800 text-sm">{job.customerName}</p>
+                        <p className="text-xs text-slate-500">{serviceName} · {job.date} at {job.time}</p>
+                        <p className="text-xs text-slate-400">{job.address}</p>
+                      </div>
+                      <button
+                        onClick={() => setAssigningJob(job)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg active:scale-95 transition-all flex-shrink-0"
+                      >
+                        Assign & Price
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="p-4 border-b border-slate-50 flex items-center justify-between">
@@ -669,6 +817,16 @@ export default function Dispatcher() {
           onClose={() => setShowDispatch(false)}
           onDispatch={handleDispatch}
           sending={sending}
+        />
+      )}
+
+      {assigningJob && (
+        <AssignRequestModal
+          job={assigningJob}
+          technicians={technicians.filter((t) => (t.status || "active") === "active")}
+          onClose={() => setAssigningJob(null)}
+          onAssign={handleAssignRequest}
+          assigning={assigning}
         />
       )}
     </div>

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, doc } from "firebase/firestore";
+import ServiceSelector from "./ServiceSelector";
+import { SERVICE_CATEGORIES } from "./services";
 
 // ============================================================
 // CONFIG
 // ============================================================
 
-const SERVICE_TYPES = ["Residential Cleaning", "Deep Cleaning", "Move-Out Cleaning", "Airbnb Turnover", "Commercial Cleaning"];
 const DURATIONS = ["1 hour", "1.5 hours", "2 hours", "2.5 hours", "3 hours", "3.5 hours", "4 hours", "5 hours", "6 hours", "8 hours"];
 
 // These match the exact status strings the technician app (App.jsx / STATUS_FLOW) writes and reads.
@@ -14,7 +15,7 @@ const STATUS_FLOW = ["Accepted", "En Route", "Arrived", "In Progress", "Complete
 
 const EMPTY_JOB_FORM = {
   customerName: "", customerPhone: "", address: "", city: "", state: "", zip: "",
-  date: "", time: "", duration: "2 hours", serviceType: SERVICE_TYPES[0],
+  date: "", time: "", duration: "2 hours", serviceType: "",
   description: "", payout: "",
 };
 
@@ -118,6 +119,7 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
     if (!form.date) e.date = "Required";
     if (!form.time) e.time = "Required";
     if (!form.payout || isNaN(form.payout)) e.payout = "Enter a valid amount";
+    if (!form.serviceType) e.serviceType = "Select a service";
     if (!selectedTechId) e.tech = "Select a technician";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -167,7 +169,7 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
                 <select value={selectedTechId} onChange={(e) => setSelectedTechId(e.target.value)} className={inputCls(errors.tech)}>
                   <option value="">Select a technician…</option>
                   {qualifiedTechs.length > 0 && (
-                    <optgroup label={`Offers ${form.serviceType}`}>
+                    <optgroup label={`Offers ${form.serviceType.includes(" > ") ? form.serviceType.split(" > ")[1] : form.serviceType}`}>
                       {qualifiedTechs.map((t) => (
                         <option key={t.id} value={t.id}>{t.firstName} {t.lastName} — {t.phone}</option>
                       ))}
@@ -206,18 +208,24 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
                   <input value={form.time} onChange={set("time")} placeholder="9:00 AM" className={inputCls(errors.time)} />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Service Type">
-                  <select value={form.serviceType} onChange={set("serviceType")} className={inputCls()}>
-                    {SERVICE_TYPES.map((s) => <option key={s}>{s}</option>)}
-                  </select>
-                </Field>
-                <Field label="Duration">
-                  <select value={form.duration} onChange={set("duration")} className={inputCls()}>
-                    {DURATIONS.map((d) => <option key={d}>{d}</option>)}
-                  </select>
-                </Field>
-              </div>
+              <Field label="Service Type" error={errors.serviceType}>
+                <select value={form.serviceType} onChange={set("serviceType")} className={inputCls(errors.serviceType)}>
+                  <option value="">Select a service…</option>
+                  {SERVICE_CATEGORIES.map(({ category, items }) => (
+                    <optgroup key={category} label={category}>
+                      {items.map((item) => {
+                        const key = `${category} > ${item}`;
+                        return <option key={key} value={key}>{item}</option>;
+                      })}
+                    </optgroup>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Duration">
+                <select value={form.duration} onChange={set("duration")} className={inputCls()}>
+                  {DURATIONS.map((d) => <option key={d}>{d}</option>)}
+                </select>
+              </Field>
               <Field label="Payout ($)" error={errors.payout}>
                 <input value={form.payout} onChange={set("payout")} placeholder="120" type="number" min="0" className={inputCls(errors.payout)} />
               </Field>
@@ -237,7 +245,7 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
                     ["Customer", form.customerName],
                     ["Address", fullAddress],
                     ["Date & Time", `${form.date} at ${form.time}`],
-                    ["Service", form.serviceType],
+                    ["Service", form.serviceType.includes(" > ") ? form.serviceType.split(" > ")[1] : form.serviceType],
                     ["Duration", form.duration],
                     ["Payout", `$${parseFloat(form.payout || 0).toFixed(2)}`],
                   ].map(([k, v]) => (
@@ -336,8 +344,6 @@ function TechnicianRow({ tech, jobsCompleted, onApprove }) {
 function AddTechnicianForm({ onAdd }) {
   const [form, setForm] = useState(EMPTY_TECH_FORM);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const toggleService = (s) =>
-    setForm((f) => ({ ...f, services: f.services.includes(s) ? f.services.filter((x) => x !== s) : [...f.services, s] }));
 
   const handleSubmit = () => {
     if (!form.firstName || !form.phone) return;
@@ -358,18 +364,7 @@ function AddTechnicianForm({ onAdd }) {
       </div>
       <div>
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Services Offered</p>
-        <div className="flex flex-wrap gap-2">
-          {SERVICE_TYPES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => toggleService(s)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${form.services.includes(s) ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        <ServiceSelector selected={form.services} onChange={(services) => setForm((f) => ({ ...f, services }))} />
       </div>
       <button onClick={handleSubmit} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm">
         Add Technician
@@ -390,7 +385,7 @@ function JobRow({ job, tech, isLast }) {
           <Badge status={job.status} />
         </div>
         <p className="font-semibold text-slate-800 text-sm mt-0.5">{job.customerName}</p>
-        <p className="text-xs text-slate-500">{job.serviceType} · {job.date}</p>
+        <p className="text-xs text-slate-500">{job.serviceType && job.serviceType.includes(" > ") ? job.serviceType.split(" > ")[1] : job.serviceType} · {job.date}</p>
       </div>
       <div className="text-right flex-shrink-0">
         <p className="font-bold text-slate-700 text-sm">${Number(job.payout || 0).toFixed(0)}</p>

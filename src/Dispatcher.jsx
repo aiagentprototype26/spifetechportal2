@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, doc } from "firebase/firestore";
 
 // ============================================================
 // CONFIG
@@ -35,10 +35,13 @@ function Badge({ status }) {
     "In Progress": "bg-indigo-100 text-indigo-700 border border-indigo-200",
     Declined: "bg-red-100 text-red-600 border border-red-200",
     Completed: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+    active: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+    pending: "bg-amber-100 text-amber-700 border border-amber-200",
   };
+  const labels = { active: "Active", pending: "Pending Approval" };
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${map[status] || "bg-slate-100 text-slate-500"}`}>
-      {status}
+      {labels[status] || status}
     </span>
   );
 }
@@ -294,12 +297,16 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
 // TECHNICIAN MANAGEMENT
 // ============================================================
 
-function TechnicianRow({ tech, jobsCompleted }) {
+function TechnicianRow({ tech, jobsCompleted, onApprove }) {
+  const isPending = tech.status === "pending";
   return (
     <div className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors rounded-xl">
       <Avatar name={`${tech.firstName} ${tech.lastName}`} />
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-800 text-sm">{tech.firstName} {tech.lastName}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-semibold text-slate-800 text-sm">{tech.firstName} {tech.lastName}</p>
+          <Badge status={tech.status || "active"} />
+        </div>
         <p className="text-xs text-slate-500 mt-0.5">{tech.phone}{tech.city ? ` · ${tech.city}` : ""}</p>
         {(tech.services || []).length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
@@ -311,7 +318,16 @@ function TechnicianRow({ tech, jobsCompleted }) {
         )}
       </div>
       <div className="text-right flex-shrink-0">
-        <p className="text-xs text-slate-400">{jobsCompleted} job{jobsCompleted !== 1 ? "s" : ""} done</p>
+        {isPending ? (
+          <button
+            onClick={() => onApprove(tech.id)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg active:scale-95 transition-all"
+          >
+            ✓ Approve
+          </button>
+        ) : (
+          <p className="text-xs text-slate-400">{jobsCompleted} job{jobsCompleted !== 1 ? "s" : ""} done</p>
+        )}
       </div>
     </div>
   );
@@ -325,13 +341,14 @@ function AddTechnicianForm({ onAdd }) {
 
   const handleSubmit = () => {
     if (!form.firstName || !form.phone) return;
-    onAdd(form);
+    onAdd({ ...form, status: "active" });
     setForm(EMPTY_TECH_FORM);
   };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
       <p className="text-sm font-bold text-slate-700">Add Technician</p>
+      <p className="text-xs text-slate-400 -mt-2">Added here goes live immediately. Techs who self-apply at /apply need approval below instead.</p>
       <div className="grid grid-cols-2 gap-3">
         <input value={form.firstName} onChange={set("firstName")} placeholder="First Name" className={inputCls()} />
         <input value={form.lastName} onChange={set("lastName")} placeholder="Last Name" className={inputCls()} />
@@ -418,6 +435,16 @@ export default function Dispatcher() {
     try {
       await addDoc(collection(db, "technicians"), techForm);
       showToast(`${techForm.firstName} added.`);
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  };
+
+  const handleApproveTech = async (techId) => {
+    try {
+      await updateDoc(doc(db, "technicians", techId), { status: "active" });
+      const tech = technicians.find((t) => t.id === techId);
+      showToast(`${tech?.firstName || "Technician"} approved.`);
     } catch (e) {
       showToast(e.message, "error");
     }
@@ -556,7 +583,7 @@ export default function Dispatcher() {
               ) : (
                 technicians.map((tech, i, arr) => (
                   <div key={tech.id} className={i !== arr.length - 1 ? "border-b border-slate-50" : ""}>
-                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} />
+                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} />
                   </div>
                 ))
               )}
@@ -571,13 +598,30 @@ export default function Dispatcher() {
               <p className="text-slate-500 text-sm mt-0.5">{technicians.length} total</p>
             </div>
             <AddTechnicianForm onAdd={handleAddTech} />
+
+            {technicians.filter((t) => t.status === "pending").length > 0 && (
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-amber-100">
+                  <p className="font-bold text-amber-800 text-sm">
+                    ⏳ {technicians.filter((t) => t.status === "pending").length} pending approval
+                  </p>
+                  <p className="text-amber-600 text-xs mt-0.5">Applied via the self-signup link. Review and approve to activate.</p>
+                </div>
+                {technicians.filter((t) => t.status === "pending").map((tech, i, arr) => (
+                  <div key={tech.id} className={i !== arr.length - 1 ? "border-b border-amber-100" : ""}>
+                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} />
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               {technicians.length === 0 ? (
                 <p className="p-6 text-sm text-slate-400 text-center">None yet — add one above.</p>
               ) : (
                 technicians.map((tech, i) => (
                   <div key={tech.id} className={i !== technicians.length - 1 ? "border-b border-slate-50" : ""}>
-                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} />
+                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} />
                   </div>
                 ))
               )}
@@ -625,7 +669,12 @@ export default function Dispatcher() {
       </main>
 
       {showDispatch && (
-        <DispatchModal technicians={technicians} onClose={() => setShowDispatch(false)} onDispatch={handleDispatch} sending={sending} />
+        <DispatchModal
+          technicians={technicians.filter((t) => (t.status || "active") === "active")}
+          onClose={() => setShowDispatch(false)}
+          onDispatch={handleDispatch}
+          sending={sending}
+        />
       )}
     </div>
   );

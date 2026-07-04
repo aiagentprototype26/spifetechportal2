@@ -633,7 +633,7 @@ export default function App() {
   };
 
   const handleDecline = async (jobId) => {
-    await updateDoc(doc(db, "jobs", jobId), { status: "Declined", technicianId: null });
+    await updateDoc(doc(db, "jobs", jobId), { status: "Declined" });
   };
 
   const handleUpdateStatus = async (jobId, newStatus) => {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
 import ServiceSelector from "./ServiceSelector";
+import logo from "./assets/logo.jpg";
 
 const EMPTY_FORM = {
   firstName: "", lastName: "", phone: "", email: "", city: "", services: [],
@@ -73,7 +74,7 @@ export default function Apply() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-5" style={{ fontFamily: "system-ui, sans-serif" }}>
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 max-w-lg w-full overflow-hidden my-8">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
-          <span className="text-2xl">🧹</span>
+          <img src={logo} alt="Spife Clean" className="h-8 w-8 rounded-lg object-cover" />
           <h1 className="font-bold text-xl mt-2">Join Spife Clean</h1>
           <p className="text-blue-100 text-sm mt-1">Apply to become a technician. We'll review your info before activating your account.</p>
         </div>

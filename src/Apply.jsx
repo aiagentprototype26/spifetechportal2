@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
-
-const SERVICE_TYPES = ["Residential Cleaning", "Deep Cleaning", "Move-Out Cleaning", "Airbnb Turnover", "Commercial Cleaning"];
+import ServiceSelector from "./ServiceSelector";
 
 const EMPTY_FORM = {
   firstName: "", lastName: "", phone: "", email: "", city: "", services: [],
@@ -20,8 +19,6 @@ export default function Apply() {
   const [error, setError] = useState("");
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const toggleService = (s) =>
-    setForm((f) => ({ ...f, services: f.services.includes(s) ? f.services.filter((x) => x !== s) : [...f.services, s] }));
 
   const validate = () => {
     const e = {};
@@ -29,7 +26,7 @@ export default function Apply() {
     if (!form.lastName) e.lastName = "Required";
     if (!form.phone) e.phone = "Required";
     else if (!/^\+?[0-9]{10,15}$/.test(form.phone.replace(/[\s()-]/g, ""))) e.phone = "Use format +15125550182";
-    if (form.services.length === 0) e.services = "Select at least one";
+    if (form.services.length === 0) e.services = "Select at least one service";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -74,7 +71,7 @@ export default function Apply() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-5" style={{ fontFamily: "system-ui, sans-serif" }}>
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 max-w-lg w-full overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 max-w-lg w-full overflow-hidden my-8">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
           <span className="text-2xl">🧹</span>
           <h1 className="font-bold text-xl mt-2">Join Spife Clean</h1>
@@ -100,19 +97,9 @@ export default function Apply() {
           <input value={form.city} onChange={set("city")} placeholder="City" className={inputCls()} />
 
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Services You Offer</p>
-            <div className="flex flex-wrap gap-2">
-              {SERVICE_TYPES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => toggleService(s)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${form.services.includes(s) ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Services You Perform</p>
+            <p className="text-xs text-slate-400 mb-2">Tap a category to expand it, then check everything you're able to do.</p>
+            <ServiceSelector selected={form.services} onChange={(services) => setForm((f) => ({ ...f, services }))} />
             {errors.services && <p className="text-red-500 text-xs mt-1">{errors.services}</p>}
           </div>
 

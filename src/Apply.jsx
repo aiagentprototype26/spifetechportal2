@@ -4,8 +4,11 @@ import { collection, addDoc } from "firebase/firestore";
 import ServiceSelector from "./ServiceSelector";
 import logo from "./assets/logo.jpg";
 
+const LOCATIONS = ["Bronx", "Queens", "Brooklyn", "Manhattan", "Nassau County", "Suffolk County"];
+
 const EMPTY_FORM = {
   firstName: "", lastName: "", phone: "", email: "", city: "", services: [],
+  locations: [], hasVehicle: "",
 };
 
 function inputCls(error) {
@@ -21,6 +24,15 @@ export default function Apply() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const toggleLocation = (loc) => {
+    setForm((f) => ({
+      ...f,
+      locations: f.locations.includes(loc)
+        ? f.locations.filter((l) => l !== loc)
+        : [...f.locations, loc],
+    }));
+  };
+
   const validate = () => {
     const e = {};
     if (!form.firstName) e.firstName = "Required";
@@ -28,6 +40,8 @@ export default function Apply() {
     if (!form.phone) e.phone = "Required";
     else if (!/^\+?[0-9]{10,15}$/.test(form.phone.replace(/[\s()-]/g, ""))) e.phone = "Use format +15125550182";
     if (form.services.length === 0) e.services = "Select at least one service";
+    if (form.locations.length === 0) e.locations = "Select at least one location";
+    if (!form.hasVehicle) e.hasVehicle = "Required";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -46,6 +60,8 @@ export default function Apply() {
         email: form.email,
         city: form.city,
         services: form.services,
+        locations: form.locations,
+        hasVehicle: form.hasVehicle === "yes",
         status: "pending",
       });
       setSubmitted(true);
@@ -90,10 +106,12 @@ export default function Apply() {
               {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
             </div>
           </div>
+
           <div>
             <input value={form.phone} onChange={set("phone")} placeholder="Phone (e.g. +15125550182)" className={inputCls(errors.phone)} />
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
+
           <input value={form.email} onChange={set("email")} placeholder="Email (optional)" className={inputCls()} />
           <input value={form.city} onChange={set("city")} placeholder="City" className={inputCls()} />
 
@@ -102,6 +120,55 @@ export default function Apply() {
             <p className="text-xs text-slate-400 mb-2">Tap a category to expand it, then check everything you're able to do.</p>
             <ServiceSelector selected={form.services} onChange={(services) => setForm((f) => ({ ...f, services }))} />
             {errors.services && <p className="text-red-500 text-xs mt-1">{errors.services}</p>}
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Locations You Can Work</p>
+            <p className="text-xs text-slate-400 mb-2">Select every area you're willing to take jobs in.</p>
+            <div className="grid grid-cols-2 gap-2">
+              {LOCATIONS.map((loc) => {
+                const active = form.locations.includes(loc);
+                return (
+                  <button
+                    type="button"
+                    key={loc}
+                    onClick={() => toggleLocation(loc)}
+                    className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all ${
+                      active
+                        ? "bg-blue-600 border-blue-600 text-white font-medium"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
+                    }`}
+                  >
+                    {active ? "✓ " : ""}{loc}
+                  </button>
+                );
+              })}
+            </div>
+            {errors.locations && <p className="text-red-500 text-xs mt-1">{errors.locations}</p>}
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Do You Have Your Own Vehicle?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { v: "yes", label: "Yes" },
+                { v: "no", label: "No" },
+              ].map((opt) => (
+                <button
+                  type="button"
+                  key={opt.v}
+                  onClick={() => setForm((f) => ({ ...f, hasVehicle: opt.v }))}
+                  className={`text-sm px-3 py-2.5 rounded-xl border font-medium transition-all ${
+                    form.hasVehicle === opt.v
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {errors.hasVehicle && <p className="text-red-500 text-xs mt-1">{errors.hasVehicle}</p>}
           </div>
 
           {error && <p className="text-red-500 text-xs">{error}</p>}

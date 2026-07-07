@@ -171,6 +171,23 @@ function BookingForm({ customer, onBooked }) {
         status: "Requested",
         createdAt: serverTimestamp(),
       });
+
+      const serviceName = form.serviceType.includes(" > ") ? form.serviceType.split(" > ")[1] : form.serviceType;
+      fetch("/.netlify/functions/notify-new-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          address: fullAddress,
+          date: form.date,
+          time: form.time,
+          serviceType: serviceName,
+          description: form.description,
+        }),
+      }).catch(() => {
+        // Booking already saved either way — a failed notification shouldn't block the customer's confirmation.
+      });
+
       setDone(true);
       setForm(EMPTY);
       if (onBooked) onBooked();

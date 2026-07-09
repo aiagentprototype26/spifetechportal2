@@ -21,8 +21,10 @@ const EMPTY_JOB_FORM = {
 };
 
 const EMPTY_TECH_FORM = {
-  firstName: "", lastName: "", phone: "", email: "", city: "", services: [],
+  firstName: "", lastName: "", phone: "", email: "", city: "", services: [], locations: [], hasVehicle: null,
 };
+
+const LOCATIONS = ["Bronx", "Queens", "Brooklyn", "Manhattan", "Nassau County", "Suffolk County"];
 
 // ============================================================
 // UTILITIES
@@ -384,10 +386,13 @@ function AssignRequestModal({ job, technicians, onClose, onAssign, assigning }) 
 // TECHNICIAN MANAGEMENT
 // ============================================================
 
-function TechnicianRow({ tech, jobsCompleted, onApprove }) {
+function TechnicianRow({ tech, jobsCompleted, onApprove, onClick }) {
   const isPending = tech.status === "pending";
   return (
-    <div className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors rounded-xl">
+    <div
+      onClick={onClick}
+      className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors rounded-xl cursor-pointer"
+    >
       <Avatar name={`${tech.firstName} ${tech.lastName}`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -407,13 +412,103 @@ function TechnicianRow({ tech, jobsCompleted, onApprove }) {
       <div className="text-right flex-shrink-0">
         {isPending ? (
           <button
-            onClick={() => onApprove(tech.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onApprove(tech.id);
+            }}
             className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg active:scale-95 transition-all"
           >
             ✓ Approve
           </button>
         ) : (
           <p className="text-xs text-slate-400">{jobsCompleted} job{jobsCompleted !== 1 ? "s" : ""} done</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TechProfileModal({ tech, onClose, onApprove }) {
+  const isPending = tech.status === "pending";
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-lg">Technician Profile</h2>
+            <button onClick={onClose} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm">✕</button>
+          </div>
+          <div className="flex items-center gap-3">
+            <Avatar name={`${tech.firstName} ${tech.lastName}`} size="lg" />
+            <div>
+              <p className="font-bold text-lg">{tech.firstName} {tech.lastName}</p>
+              <Badge status={tech.status || "active"} />
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Phone</p>
+              <p className="text-slate-700">{tech.phone || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Email</p>
+              <p className="text-slate-700">{tech.email || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">City</p>
+              <p className="text-slate-700">{tech.city || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Has Vehicle?</p>
+              <p className="text-slate-700">{tech.hasVehicle === true ? "Yes" : tech.hasVehicle === false ? "No" : "—"}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Areas Covered</p>
+            {(tech.locations || []).length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {tech.locations.map((loc) => (
+                  <span key={loc} className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">{loc}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">—</p>
+            )}
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Services</p>
+            {(tech.services || []).length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {tech.services.map((s) => {
+                  const label = s.includes(" > ") ? s.split(" > ")[1] : s;
+                  return (
+                    <span key={s} className="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full">{label}</span>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">—</p>
+            )}
+          </div>
+        </div>
+
+        {isPending && (
+          <div className="p-5 border-t border-slate-100 flex-shrink-0">
+            <button
+              onClick={() => {
+                onApprove(tech.id);
+                onClose();
+              }}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all"
+            >
+              ✓ Approve Technician
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -444,6 +539,44 @@ function AddTechnicianForm({ onAdd }) {
       <div>
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Services Offered</p>
         <ServiceSelector selected={form.services} onChange={(services) => setForm((f) => ({ ...f, services }))} />
+      </div>
+      <div>
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Areas They Cover</p>
+        <div className="flex flex-wrap gap-2">
+          {LOCATIONS.map((loc) => {
+            const selected = form.locations.includes(loc);
+            return (
+              <button
+                key={loc}
+                type="button"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    locations: selected ? f.locations.filter((l) => l !== loc) : [...f.locations, loc],
+                  }))
+                }
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${selected ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
+              >
+                {loc}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Has Own Vehicle?</p>
+        <div className="flex gap-2">
+          {[{ label: "Yes", value: true }, { label: "No", value: false }].map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              onClick={() => setForm((f) => ({ ...f, hasVehicle: opt.value }))}
+              className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold border transition-colors ${form.hasVehicle === opt.value ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
       <button onClick={handleSubmit} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm">
         Add Technician
@@ -487,6 +620,7 @@ export default function Dispatcher() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [sending, setSending] = useState(false);
   const [assigningJob, setAssigningJob] = useState(null);
+  const [viewingTech, setViewingTech] = useState(null);
   const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
@@ -726,7 +860,7 @@ export default function Dispatcher() {
               ) : (
                 technicians.map((tech, i, arr) => (
                   <div key={tech.id} className={i !== arr.length - 1 ? "border-b border-slate-50" : ""}>
-                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} />
+                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} onClick={() => setViewingTech(tech)} />
                   </div>
                 ))
               )}
@@ -752,7 +886,7 @@ export default function Dispatcher() {
                 </div>
                 {technicians.filter((t) => t.status === "pending").map((tech, i, arr) => (
                   <div key={tech.id} className={i !== arr.length - 1 ? "border-b border-amber-100" : ""}>
-                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} />
+                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} onClick={() => setViewingTech(tech)} />
                   </div>
                 ))}
               </div>
@@ -764,7 +898,7 @@ export default function Dispatcher() {
               ) : (
                 technicians.map((tech, i) => (
                   <div key={tech.id} className={i !== technicians.length - 1 ? "border-b border-slate-50" : ""}>
-                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} />
+                    <TechnicianRow tech={tech} jobsCompleted={jobsCompletedFor(tech.id)} onApprove={handleApproveTech} onClick={() => setViewingTech(tech)} />
                   </div>
                 ))
               )}
@@ -827,6 +961,14 @@ export default function Dispatcher() {
           onClose={() => setAssigningJob(null)}
           onAssign={handleAssignRequest}
           assigning={assigning}
+        />
+      )}
+
+      {viewingTech && (
+        <TechProfileModal
+          tech={viewingTech}
+          onClose={() => setViewingTech(null)}
+          onApprove={handleApproveTech}
         />
       )}
     </div>

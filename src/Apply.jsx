@@ -4,12 +4,11 @@ import { collection, addDoc } from "firebase/firestore";
 import ServiceSelector from "./ServiceSelector";
 import logo from "./assets/logo.jpg";
 
-const LOCATIONS = ["Bronx", "Queens", "Brooklyn", "Manhattan", "Nassau County", "Suffolk County"];
-
 const EMPTY_FORM = {
-  firstName: "", lastName: "", phone: "", email: "", city: "", services: [],
-  locations: [], hasVehicle: "",
+  firstName: "", lastName: "", phone: "", email: "", city: "", services: [], locations: [], hasVehicle: null,
 };
+
+const LOCATIONS = ["Bronx", "Queens", "Brooklyn", "Manhattan", "Nassau County", "Suffolk County"];
 
 function inputCls(error) {
   return `w-full border rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white ${error ? "border-red-300" : "border-slate-200"}`;
@@ -24,15 +23,6 @@ export default function Apply() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const toggleLocation = (loc) => {
-    setForm((f) => ({
-      ...f,
-      locations: f.locations.includes(loc)
-        ? f.locations.filter((l) => l !== loc)
-        : [...f.locations, loc],
-    }));
-  };
-
   const validate = () => {
     const e = {};
     if (!form.firstName) e.firstName = "Required";
@@ -40,8 +30,8 @@ export default function Apply() {
     if (!form.phone) e.phone = "Required";
     else if (!/^\+?[0-9]{10,15}$/.test(form.phone.replace(/[\s()-]/g, ""))) e.phone = "Use format +15125550182";
     if (form.services.length === 0) e.services = "Select at least one service";
-    if (form.locations.length === 0) e.locations = "Select at least one location";
-    if (!form.hasVehicle) e.hasVehicle = "Required";
+    if (form.locations.length === 0) e.locations = "Select at least one area";
+    if (form.hasVehicle === null) e.hasVehicle = "Please answer";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -61,7 +51,7 @@ export default function Apply() {
         city: form.city,
         services: form.services,
         locations: form.locations,
-        hasVehicle: form.hasVehicle === "yes",
+        hasVehicle: form.hasVehicle,
         status: "pending",
       });
       setSubmitted(true);
@@ -106,12 +96,10 @@ export default function Apply() {
               {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
             </div>
           </div>
-
           <div>
             <input value={form.phone} onChange={set("phone")} placeholder="Phone (e.g. +15125550182)" className={inputCls(errors.phone)} />
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
-
           <input value={form.email} onChange={set("email")} placeholder="Email (optional)" className={inputCls()} />
           <input value={form.city} onChange={set("city")} placeholder="City" className={inputCls()} />
 
@@ -123,23 +111,23 @@ export default function Apply() {
           </div>
 
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Locations You Can Work</p>
-            <p className="text-xs text-slate-400 mb-2">Select every area you're willing to take jobs in.</p>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Areas You Can Work</p>
+            <div className="flex flex-wrap gap-2">
               {LOCATIONS.map((loc) => {
-                const active = form.locations.includes(loc);
+                const selected = form.locations.includes(loc);
                 return (
                   <button
-                    type="button"
                     key={loc}
-                    onClick={() => toggleLocation(loc)}
-                    className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all ${
-                      active
-                        ? "bg-blue-600 border-blue-600 text-white font-medium"
-                        : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
-                    }`}
+                    type="button"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        locations: selected ? f.locations.filter((l) => l !== loc) : [...f.locations, loc],
+                      }))
+                    }
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${selected ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
                   >
-                    {active ? "✓ " : ""}{loc}
+                    {loc}
                   </button>
                 );
               })}
@@ -148,21 +136,14 @@ export default function Apply() {
           </div>
 
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Do You Have Your Own Vehicle?</p>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { v: "yes", label: "Yes" },
-                { v: "no", label: "No" },
-              ].map((opt) => (
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Do you have your own vehicle?</p>
+            <div className="flex gap-2">
+              {[{ label: "Yes", value: true }, { label: "No", value: false }].map((opt) => (
                 <button
+                  key={opt.label}
                   type="button"
-                  key={opt.v}
-                  onClick={() => setForm((f) => ({ ...f, hasVehicle: opt.v }))}
-                  className={`text-sm px-3 py-2.5 rounded-xl border font-medium transition-all ${
-                    form.hasVehicle === opt.v
-                      ? "bg-blue-600 border-blue-600 text-white"
-                      : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
-                  }`}
+                  onClick={() => setForm((f) => ({ ...f, hasVehicle: opt.value }))}
+                  className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${form.hasVehicle === opt.value ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
                 >
                   {opt.label}
                 </button>

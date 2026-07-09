@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
 import logo from "./assets/logo.jpg";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, doc } from "firebase/firestore";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import ServiceSelector from "./ServiceSelector";
 import { SERVICE_CATEGORIES } from "./services";
 
@@ -611,7 +612,7 @@ function JobRow({ job, tech, isLast }) {
 // MAIN APP
 // ============================================================
 
-export default function Dispatcher() {
+function DispatcherDashboard() {
   const [page, setPage] = useState("dashboard");
   const [showDispatch, setShowDispatch] = useState(false);
   const [technicians, setTechnicians] = useState([]);
@@ -776,9 +777,14 @@ export default function Dispatcher() {
             <span className="ml-2 text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Dispatcher</span>
           </div>
         </div>
-        <button onClick={() => setShowDispatch(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 active:scale-95 transition-all shadow-sm">
-          <span>+</span> Dispatch Job
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowDispatch(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 active:scale-95 transition-all shadow-sm">
+            <span>+</span> Dispatch Job
+          </button>
+          <button onClick={() => signOut(auth)} className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors" title="Log out">
+            <span className="text-sm">↩</span>
+          </button>
+        </div>
       </header>
 
       <nav className="bg-white border-b border-slate-100 px-4 flex gap-1 overflow-x-auto">
@@ -973,4 +979,90 @@ export default function Dispatcher() {
       )}
     </div>
   );
+}
+
+// ============================================================
+// LOGIN GATE
+// ============================================================
+
+function LoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      setError("Incorrect email or password.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-5" style={{ fontFamily: "system-ui, sans-serif" }}>
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 max-w-sm w-full overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white text-center">
+          <img src={logo} alt="Spife Clean" className="h-10 w-10 rounded-lg object-cover mx-auto" />
+          <h1 className="font-bold text-xl mt-2">Dispatcher Login</h1>
+          <p className="text-blue-100 text-sm mt-1">Restricted — authorized access only.</p>
+        </div>
+        <div className="p-6 space-y-4">
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            type="email"
+            className="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          />
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            type="password"
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            className="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          />
+          {error && <p className="text-red-500 text-xs">{error}</p>}
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all"
+          >
+            {loading ? "Logging in…" : "Log In"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Dispatcher() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-sm text-slate-400">Loading…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  return <DispatcherDashboard />;
 }

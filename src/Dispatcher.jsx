@@ -72,9 +72,12 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
-function StatCard({ label, value, icon, sub, color = "text-slate-800" }) {
+function StatCard({ label, value, icon, sub, color = "text-slate-800", onClick }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-2xl border border-slate-100 p-5 shadow-sm ${onClick ? "cursor-pointer hover:border-blue-200 hover:shadow-md transition-all active:scale-95" : ""}`}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs text-slate-500 font-semibold uppercase tracking-wide">{label}</p>

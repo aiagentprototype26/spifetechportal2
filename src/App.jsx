@@ -3,7 +3,7 @@ import { db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
 import ServiceSelector from "./ServiceSelector";
 import logo from "./assets/logo.jpg";
-
+import SpifeResidentialHome from "./SpifeResidentialHome";
 const EMPTY_FORM = {
   firstName: "", lastName: "", phone: "", email: "", city: "", services: [],
 };
@@ -51,12 +51,16 @@ export default function Apply() {
       setSubmitted(true);
     } catch (e) {
       setError(e.message);
-    }
     setSubmitting(false);
-  };
+    };
+  
+if (window.location.pathname === "/residential") {
+  return <SpifeResidentialHome />;
+}
 
-  if (submitted) {
-    return (
+if (submitted) {
+  return (
+    
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-5" style={{ fontFamily: "system-ui, sans-serif" }}>
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">✅</div>

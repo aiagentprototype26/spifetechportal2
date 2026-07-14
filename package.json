@@ -8,9 +8,10 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "   dependencies": {
-     "lucide-react": "^0.383.0",
-  
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.383.0",
     "firebase": "^10.13.0",
     "twilio": "^5.3.0"
   },

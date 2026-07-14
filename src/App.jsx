@@ -4,6 +4,7 @@ import { collection, addDoc } from "firebase/firestore";
 import ServiceSelector from "./ServiceSelector";
 import logo from "./assets/logo.jpg";
 import SpifeResidentialHome from "./SpifeResidentialHome";
+
 const EMPTY_FORM = {
   firstName: "", lastName: "", phone: "", email: "", city: "", services: [],
 };
@@ -38,12 +39,6 @@ export default function Apply() {
     setError("");
     try {
       const cleanPhone = form.phone.replace(/[\s()-]/g, "");
-     const handleSubmit = async () => {
-    if (!validate()) return;
-    setSubmitting(true);
-    setError("");
-    try {
-      const cleanPhone = form.phone.replace(/[\s()-]/g, "");
       const phone = cleanPhone.startsWith("+") ? cleanPhone : `+1${cleanPhone}`;
       await addDoc(collection(db, "technicians"), {
         firstName: form.firstName,
@@ -67,8 +62,7 @@ export default function Apply() {
   }
 
   if (submitted) {
-  return (
-    
+    return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-5" style={{ fontFamily: "system-ui, sans-serif" }}>
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">✅</div>

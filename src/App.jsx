@@ -38,6 +38,12 @@ export default function Apply() {
     setError("");
     try {
       const cleanPhone = form.phone.replace(/[\s()-]/g, "");
+     const handleSubmit = async () => {
+    if (!validate()) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const cleanPhone = form.phone.replace(/[\s()-]/g, "");
       const phone = cleanPhone.startsWith("+") ? cleanPhone : `+1${cleanPhone}`;
       await addDoc(collection(db, "technicians"), {
         firstName: form.firstName,
@@ -48,8 +54,10 @@ export default function Apply() {
         services: form.services,
         status: "pending",
       });
-} catch (e) {
+      setSubmitted(true);
+    } catch (e) {
       setError(e.message);
+    } finally {
       setSubmitting(false);
     }
   };

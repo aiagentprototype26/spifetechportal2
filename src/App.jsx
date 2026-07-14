@@ -48,17 +48,17 @@ export default function Apply() {
         services: form.services,
         status: "pending",
       });
-      setSubmitted(true);
-    } catch (e) {
+} catch (e) {
       setError(e.message);
-    setSubmitting(false);
-    };
-  
-if (window.location.pathname === "/residential") {
-  return <SpifeResidentialHome />;
-}
+      setSubmitting(false);
+    }
+  };
 
-if (submitted) {
+  if (window.location.pathname === "/residential") {
+    return <SpifeResidentialHome />;
+  }
+
+  if (submitted) {
   return (
     
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-5" style={{ fontFamily: "system-ui, sans-serif" }}>

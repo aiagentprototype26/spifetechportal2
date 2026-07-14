@@ -759,7 +759,13 @@ function DispatcherDashboard() {
     revenue: jobs.filter((j) => j.status === "Completed").reduce((s, j) => s + Number(j.payout || 0), 0),
   };
 
-  const filteredJobs = filterStatus === "all" ? jobs : jobs.filter((j) => j.status === filterStatus);
+  const filteredJobs =
+    filterStatus === "all"
+      ? jobs
+      : filterStatus === "active"
+      ? jobs.filter((j) => STATUS_FLOW.slice(0, -1).includes(j.status))
+      : jobs.filter((j) => j.status === filterStatus);
+
   const allStatuses = ["Requested", "Offered", ...STATUS_FLOW, "Declined"];
 
   const navItems = [
@@ -810,10 +816,49 @@ function DispatcherDashboard() {
               <p className="text-slate-500 text-sm mt-0.5">{new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <StatCard label="Total Jobs" value={stats.total} icon="🗂" sub="all time" />
-              <StatCard label="Awaiting Response" value={stats.offered} icon="⏳" sub="needs action" color="text-amber-600" />
-              <StatCard label="Active Jobs" value={stats.active} icon="🔵" sub="in progress" color="text-blue-600" />
-              <StatCard label="Revenue Paid" value={`$${stats.revenue.toFixed(0)}`} icon="💰" sub="completed jobs" color="text-emerald-600" />
+              <StatCard
+                label="Total Jobs"
+                value={stats.total}
+                icon="🗂"
+                sub="all time"
+                onClick={() => {
+                  setFilterStatus("all");
+                  setPage("jobs");
+                }}
+              />
+              <StatCard
+                label="Awaiting Response"
+                value={stats.offered}
+                icon="⏳"
+                sub="needs action"
+                color="text-amber-600"
+                onClick={() => {
+                  setFilterStatus("Offered");
+                  setPage("jobs");
+                }}
+              />
+              <StatCard
+                label="Active Jobs"
+                value={stats.active}
+                icon="🔵"
+                sub="in progress"
+                color="text-blue-600"
+                onClick={() => {
+                  setFilterStatus("active");
+                  setPage("jobs");
+                }}
+              />
+              <StatCard
+                label="Revenue Paid"
+                value={`$${stats.revenue.toFixed(0)}`}
+                icon="💰"
+                sub="completed jobs"
+                color="text-emerald-600"
+                onClick={() => {
+                  setFilterStatus("Completed");
+                  setPage("jobs");
+                }}
+              />
             </div>
 
             {jobs.filter((j) => j.status === "Requested").length > 0 && (

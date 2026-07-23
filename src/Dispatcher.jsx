@@ -6,6 +6,13 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebas
 import ServiceSelector from "./ServiceSelector";
 import { SERVICE_CATEGORIES } from "./services";
 
+const FONT_IMPORT = `
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+.font-display { font-family: 'Space Grotesk', sans-serif; }
+.font-body { font-family: 'Inter', sans-serif; }
+.font-mono { font-family: 'IBM Plex Mono', monospace; }
+`;
+
 // ============================================================
 // CONFIG
 // ============================================================
@@ -56,7 +63,7 @@ function Avatar({ name, size = "md" }) {
   const initials = (name || "?").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
   const sz = size === "lg" ? "w-12 h-12 text-lg" : size === "sm" ? "w-7 h-7 text-xs" : "w-9 h-9 text-sm";
   return (
-    <div className={`${sz} rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold flex-shrink-0`}>
+    <div className={`${sz} rounded-full bg-gradient-to-br from-[#0B5FFF] to-[#0A2540] flex items-center justify-center text-white font-bold flex-shrink-0`}>
       {initials}
     </div>
   );
@@ -152,7 +159,7 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white flex-shrink-0">
+        <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0A2540] p-5 text-white flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-lg">Dispatch New Job</h2>
             <button onClick={onClose} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm">✕</button>
@@ -160,7 +167,7 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
           <div className="flex items-center gap-2">
             {stepLabels.map((label, i) => (
               <div key={i} className="flex items-center gap-2 flex-1">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i + 1 <= step ? "bg-white text-blue-600" : "bg-white/30 text-white"}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i + 1 <= step ? "bg-white text-[#0B5FFF]" : "bg-white/30 text-white"}`}>
                   {i + 1 < step ? "✓" : i + 1}
                 </div>
                 <span className={`text-xs font-semibold truncate ${i + 1 === step ? "text-white" : "text-blue-200"}`}>{label}</span>
@@ -246,7 +253,7 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
           {step === 2 && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-3">Job Summary</p>
+                <p className="text-xs font-bold text-[#0B5FFF] uppercase tracking-wide mb-3">Job Summary</p>
                 <div className="space-y-2 text-sm">
                   {[
                     ["Assigned To", selectedTech ? `${selectedTech.firstName} ${selectedTech.lastName}` : "—"],
@@ -295,7 +302,7 @@ function DispatchModal({ technicians, onClose, onDispatch, sending }) {
             </button>
           )}
           {step < 2 ? (
-            <button onClick={handleNext} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all">
+            <button onClick={handleNext} className="flex-1 bg-[#0B5FFF] hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all">
               Continue →
             </button>
           ) : (
@@ -333,7 +340,7 @@ function AssignRequestModal({ job, technicians, onClose, onAssign, assigning }) 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white flex-shrink-0">
+        <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0A2540] p-5 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-lg">Assign & Price Request</h2>
             <button onClick={onClose} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm">✕</button>
@@ -437,7 +444,7 @@ function TechProfileModal({ tech, onClose, onApprove }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
       <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white flex-shrink-0">
+        <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0A2540] p-5 text-white flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg">Technician Profile</h2>
             <button onClick={onClose} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm">✕</button>
@@ -559,7 +566,7 @@ function AddTechnicianForm({ onAdd }) {
                     locations: selected ? f.locations.filter((l) => l !== loc) : [...f.locations, loc],
                   }))
                 }
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${selected ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${selected ? "bg-[#0B5FFF] border-[#0B5FFF] text-white" : "bg-white border-slate-200 text-slate-500"}`}
               >
                 {loc}
               </button>
@@ -575,14 +582,14 @@ function AddTechnicianForm({ onAdd }) {
               key={opt.label}
               type="button"
               onClick={() => setForm((f) => ({ ...f, hasVehicle: opt.value }))}
-              className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold border transition-colors ${form.hasVehicle === opt.value ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-500"}`}
+              className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold border transition-colors ${form.hasVehicle === opt.value ? "bg-[#0B5FFF] border-[#0B5FFF] text-white" : "bg-white border-slate-200 text-slate-500"}`}
             >
               {opt.label}
             </button>
           ))}
         </div>
       </div>
-      <button onClick={handleSubmit} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm">
+      <button onClick={handleSubmit} className="w-full bg-[#0B5FFF] hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm">
         Add Technician
       </button>
     </div>
@@ -775,19 +782,20 @@ function DispatcherDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col" style={{ fontFamily: "system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-[#F7F9FC] flex flex-col font-body">
+      <style>{FONT_IMPORT}</style>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <header className="bg-white border-b border-slate-100 px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-2.5">
           <img src={logo} alt="Spife Clean" className="h-7 w-7 rounded-lg object-cover" />
           <div>
-            <span className="font-bold text-slate-800 text-base tracking-tight">Spife Clean</span>
-            <span className="ml-2 text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Dispatcher</span>
+            <span className="font-display font-semibold text-[#0A2540] text-base tracking-tight">Spife Clean</span>
+            <span className="ml-2 text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Dispatcher</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowDispatch(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 active:scale-95 transition-all shadow-sm">
+          <button onClick={() => setShowDispatch(true)} className="bg-[#0B5FFF] hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 active:scale-95 transition-all shadow-sm">
             <span>+</span> Dispatch Job
           </button>
           <button onClick={() => signOut(auth)} className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors" title="Log out">
@@ -801,7 +809,7 @@ function DispatcherDashboard() {
           <button
             key={item.id}
             onClick={() => setPage(item.id)}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${page === item.id ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${page === item.id ? "border-[#0B5FFF] text-[#0B5FFF]" : "border-transparent text-slate-500 hover:text-slate-700"}`}
           >
             <span>{item.icon}</span>{item.label}
           </button>
@@ -842,7 +850,7 @@ function DispatcherDashboard() {
                 value={stats.active}
                 icon="🔵"
                 sub="in progress"
-                color="text-blue-600"
+                color="text-[#0B5FFF]"
                 onClick={() => {
                   setFilterStatus("active");
                   setPage("jobs");
@@ -867,7 +875,7 @@ function DispatcherDashboard() {
                   <p className="font-bold text-blue-800 text-sm">
                     🆕 {jobs.filter((j) => j.status === "Requested").length} new booking request{jobs.filter((j) => j.status === "Requested").length !== 1 ? "s" : ""}
                   </p>
-                  <p className="text-blue-600 text-xs mt-0.5">Submitted by customers through the booking app — set a price and assign a technician.</p>
+                  <p className="text-[#0B5FFF] text-xs mt-0.5">Submitted by customers through the booking app — set a price and assign a technician.</p>
                 </div>
                 {jobs.filter((j) => j.status === "Requested").map((job, i, arr) => {
                   const serviceName = job.serviceType && job.serviceType.includes(" > ") ? job.serviceType.split(" > ")[1] : job.serviceType;
@@ -880,7 +888,7 @@ function DispatcherDashboard() {
                       </div>
                       <button
                         onClick={() => setAssigningJob(job)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg active:scale-95 transition-all flex-shrink-0"
+                        className="bg-[#0B5FFF] hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg active:scale-95 transition-all flex-shrink-0"
                       >
                         Assign & Price
                       </button>
@@ -893,7 +901,7 @@ function DispatcherDashboard() {
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="p-4 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="font-bold text-slate-800">Recent Jobs</h3>
-                <button onClick={() => setPage("jobs")} className="text-blue-600 text-sm font-semibold">View all →</button>
+                <button onClick={() => setPage("jobs")} className="text-[#0B5FFF] text-sm font-semibold">View all →</button>
               </div>
               {jobs.length === 0 ? (
                 <p className="p-6 text-sm text-slate-400 text-center">No jobs dispatched yet.</p>
@@ -907,7 +915,7 @@ function DispatcherDashboard() {
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="p-4 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="font-bold text-slate-800">Technicians</h3>
-                <button onClick={() => setPage("technicians")} className="text-blue-600 text-sm font-semibold">Manage →</button>
+                <button onClick={() => setPage("technicians")} className="text-[#0B5FFF] text-sm font-semibold">Manage →</button>
               </div>
               {technicians.length === 0 ? (
                 <p className="p-6 text-sm text-slate-400 text-center">No technicians yet.</p>
@@ -969,7 +977,7 @@ function DispatcherDashboard() {
             <div className="flex gap-2 overflow-x-auto pb-1">
               <button
                 onClick={() => setFilterStatus("all")}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0 ${filterStatus === "all" ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"}`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0 ${filterStatus === "all" ? "bg-[#0B5FFF] text-white" : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"}`}
               >
                 All ({jobs.length})
               </button>
@@ -977,7 +985,7 @@ function DispatcherDashboard() {
                 <button
                   key={s}
                   onClick={() => setFilterStatus(s)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0 ${filterStatus === s ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"}`}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0 ${filterStatus === s ? "bg-[#0B5FFF] text-white" : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"}`}
                 >
                   {s} ({jobs.filter((j) => j.status === s).length})
                 </button>
@@ -1051,11 +1059,12 @@ function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-5" style={{ fontFamily: "system-ui, sans-serif" }}>
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 max-w-sm w-full overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white text-center">
+    <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center p-5 font-body">
+      <style>{FONT_IMPORT}</style>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 max-w-sm w-full overflow-hidden">
+        <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0A2540] p-6 text-white text-center">
           <img src={logo} alt="Spife Clean" className="h-10 w-10 rounded-lg object-cover mx-auto" />
-          <h1 className="font-bold text-xl mt-2">Dispatcher Login</h1>
+          <h1 className="font-display font-semibold text-xl mt-2">Dispatcher Login</h1>
           <p className="text-blue-100 text-sm mt-1">Restricted — authorized access only.</p>
         </div>
         <div className="p-6 space-y-4">
@@ -1078,7 +1087,7 @@ function LoginScreen() {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all"
+            className="w-full bg-[#0B5FFF] hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all"
           >
             {loading ? "Logging in…" : "Log In"}
           </button>

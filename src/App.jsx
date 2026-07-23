@@ -11,6 +11,13 @@ import {
   getDocs,
 } from "firebase/firestore";
 
+const FONT_IMPORT = `
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+.font-display { font-family: 'Space Grotesk', sans-serif; }
+.font-body { font-family: 'Inter', sans-serif; }
+.font-mono { font-family: 'IBM Plex Mono', monospace; }
+`;
+
 // ============================================================
 // SHARED UI HELPERS
 // ============================================================
@@ -37,7 +44,7 @@ function Avatar({ name, size = "md" }) {
   const initials = (name || "?").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
   const sz = size === "lg" ? "w-14 h-14 text-xl" : size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
   return (
-    <div className={`${sz} rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold flex-shrink-0`}>
+    <div className={`${sz} rounded-full bg-gradient-to-br from-[#0B5FFF] to-[#0A2540] flex items-center justify-center text-white font-bold flex-shrink-0`}>
       {initials}
     </div>
   );
@@ -80,20 +87,21 @@ function LoginScreen({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0A2540] font-body flex items-center justify-center p-4">
+      <style>{FONT_IMPORT}</style>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-white/10 rounded-2xl px-4 py-2 mb-4">
             <img src={logo} alt="Spife Clean" className="h-8 w-8 rounded-lg object-cover" />
-            <span className="text-white font-bold text-xl tracking-tight">Spife Clean</span>
+            <span className="text-white font-display font-semibold text-xl tracking-tight">Spife Clean</span>
           </div>
-          <p className="text-blue-100 text-sm">Technician Portal</p>
+          <p className="text-slate-300 text-sm">Technician Portal</p>
         </div>
-        <div className="bg-white rounded-3xl p-6 shadow-2xl">
-          <h2 className="text-xl font-bold text-slate-800 mb-1">Welcome</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-2xl">
+          <h2 className="font-display text-xl font-semibold text-[#0A2540] mb-1">Welcome</h2>
           <p className="text-slate-500 text-sm mb-6">Enter your phone number to sign in</p>
           {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-3 mb-4">{error}</div>}
-          <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Phone Number</label>
+          <label className="block text-xs font-mono text-slate-500 mb-1.5 uppercase tracking-wide">Phone Number</label>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -104,7 +112,7 @@ function LoginScreen({ onLogin }) {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-3.5 rounded-xl mt-6 transition-all text-sm disabled:opacity-60"
+            className="w-full bg-[#0B5FFF] hover:bg-blue-700 active:scale-[0.98] text-white font-semibold py-3.5 rounded-xl mt-6 transition-all text-sm disabled:opacity-60"
           >
             {loading ? "Checking…" : "Sign In"}
           </button>
@@ -132,7 +140,7 @@ function BottomNav({ active, setActive, offerCount }) {
         <button
           key={t.id}
           onClick={() => setActive(t.id)}
-          className={`flex-1 flex flex-col items-center py-2.5 gap-0.5 relative transition-colors ${active === t.id ? "text-blue-600" : "text-slate-400"}`}
+          className={`flex-1 flex flex-col items-center py-2.5 gap-0.5 relative transition-colors ${active === t.id ? "text-[#0B5FFF]" : "text-slate-400"}`}
         >
           <span className="text-lg leading-none relative">
             {t.icon}
@@ -142,8 +150,8 @@ function BottomNav({ active, setActive, offerCount }) {
               </span>
             )}
           </span>
-          <span className={`text-xs font-semibold ${active === t.id ? "text-blue-600" : "text-slate-400"}`}>{t.label}</span>
-          {active === t.id && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-blue-600 rounded-full" />}
+          <span className={`text-xs font-semibold ${active === t.id ? "text-[#0B5FFF]" : "text-slate-400"}`}>{t.label}</span>
+          {active === t.id && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-[#0B5FFF] rounded-full" />}
         </button>
       ))}
     </nav>
@@ -155,7 +163,7 @@ function TopBar({ title, onLogout }) {
     <header className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
       <div className="flex items-center gap-2">
         <img src={logo} alt="Spife Clean" className="h-6 w-6 rounded object-cover" />
-        <span className="font-bold text-slate-800 text-sm tracking-tight">{title || "Spife Clean"}</span>
+        <span className="font-display font-semibold text-slate-800 text-sm tracking-tight">{title || "Spife Clean"}</span>
       </div>
       <button onClick={onLogout} className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
         <span className="text-sm">↩</span>
@@ -171,7 +179,7 @@ function TopBar({ title, onLogout }) {
 function HomeDashboard({ tech, jobOffers, upcomingJobs, completedJobs, onNavTo }) {
   const totalEarnings = completedJobs.reduce((s, j) => s + (j.payout || 0), 0);
   const cards = [
-    { label: "New Job Offers", value: jobOffers.length, icon: "📋", color: "from-blue-500 to-blue-600", action: "offers" },
+    { label: "New Job Offers", value: jobOffers.length, icon: "📋", color: "from-[#0B5FFF] to-blue-700", action: "offers" },
     { label: "Upcoming Jobs", value: upcomingJobs.length, icon: "🗓", color: "from-violet-500 to-violet-600", action: "jobs" },
     { label: "Completed Jobs", value: completedJobs.length, icon: "✅", color: "from-emerald-500 to-emerald-600", action: "completed" },
     { label: "Total Earnings", value: `$${totalEarnings.toFixed(0)}`, icon: "💰", color: "from-amber-500 to-amber-600", action: "earnings" },
@@ -179,7 +187,7 @@ function HomeDashboard({ tech, jobOffers, upcomingJobs, completedJobs, onNavTo }
 
   return (
     <div className="p-4 pb-24 space-y-5">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 text-white">
+      <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0A2540] rounded-2xl p-5 text-white">
         <div className="flex items-center gap-3">
           <Avatar name={`${tech.firstName || ""} ${tech.lastName || ""}`} size="lg" />
           <div>
@@ -197,7 +205,7 @@ function HomeDashboard({ tech, jobOffers, upcomingJobs, completedJobs, onNavTo }
                 {jobOffers.length} job{jobOffers.length > 1 ? "s" : ""} waiting for your response
               </p>
             </div>
-            <button onClick={() => onNavTo("offers")} className="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg">
+            <button onClick={() => onNavTo("offers")} className="bg-white text-[#0B5FFF] text-xs font-bold px-3 py-1.5 rounded-lg">
               View →
             </button>
           </div>
@@ -241,7 +249,7 @@ function HomeDashboard({ tech, jobOffers, upcomingJobs, completedJobs, onNavTo }
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
               <span className="font-bold text-emerald-600">${(upcomingJobs[0].payout || 0).toFixed(2)}</span>
-              <button onClick={() => onNavTo("jobs")} className="text-blue-600 text-xs font-bold">
+              <button onClick={() => onNavTo("jobs")} className="text-[#0B5FFF] text-xs font-bold">
                 Manage →
               </button>
             </div>
@@ -281,7 +289,7 @@ function JobOffersPage({ jobOffers, onAccept, onDecline }) {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-0.5 rounded-lg">{job.id.slice(0, 8)}</span>
+                  <span className="bg-blue-50 text-[#0B5FFF] text-xs font-bold px-2 py-0.5 rounded-lg">{job.id.slice(0, 8)}</span>
                   <span className="bg-slate-50 text-slate-600 text-xs px-2 py-0.5 rounded-lg">{job.serviceType}</span>
                 </div>
                 <p className="font-bold text-slate-800 text-base">{job.customerName}</p>
@@ -312,7 +320,7 @@ function JobOffersPage({ jobOffers, onAccept, onDecline }) {
               </div>
             )}
 
-            <button onClick={() => setExpanded(expanded === job.id ? null : job.id)} className="text-blue-600 text-xs font-semibold mt-2 block">
+            <button onClick={() => setExpanded(expanded === job.id ? null : job.id)} className="text-[#0B5FFF] text-xs font-semibold mt-2 block">
               {expanded === job.id ? "Hide details ▲" : "View details ▼"}
             </button>
           </div>
@@ -334,7 +342,7 @@ function JobOffersPage({ jobOffers, onAccept, onDecline }) {
                 setTimeout(() => onAccept(job.id), 400);
               }}
               disabled={!!actioned[job.id]}
-              className="py-3.5 text-sm font-bold text-blue-600 bg-blue-50/50 active:bg-blue-100 transition-colors"
+              className="py-3.5 text-sm font-bold text-[#0B5FFF] bg-blue-50/50 active:bg-blue-100 transition-colors"
             >
               ✓ Accept Job
             </button>
@@ -368,11 +376,11 @@ function UpcomingJobsPage({ upcomingJobs, onUpdateStatus }) {
 
     return (
       <div className="p-4 pb-24">
-        <button onClick={() => setActiveJob(null)} className="flex items-center gap-1.5 text-blue-600 text-sm font-semibold mb-4">
+        <button onClick={() => setActiveJob(null)} className="flex items-center gap-1.5 text-[#0B5FFF] text-sm font-semibold mb-4">
           ← Back to jobs
         </button>
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
+          <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0A2540] p-4 text-white">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-blue-200 text-xs font-semibold">{job.id.slice(0, 8)}</p>
@@ -409,7 +417,7 @@ function UpcomingJobsPage({ upcomingJobs, onUpdateStatus }) {
                 <div key={s} className="flex flex-col items-center gap-1 relative z-10">
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all
-                    ${i < currentIdx ? "bg-blue-500 border-blue-500 text-white" : i === currentIdx ? "bg-white border-blue-500 text-blue-600" : "bg-white border-slate-200 text-slate-300"}`}
+                    ${i < currentIdx ? "bg-blue-500 border-blue-500 text-white" : i === currentIdx ? "bg-white border-blue-500 text-[#0B5FFF]" : "bg-white border-slate-200 text-slate-300"}`}
                   >
                     {i < currentIdx ? "✓" : i + 1}
                   </div>
@@ -423,7 +431,7 @@ function UpcomingJobsPage({ upcomingJobs, onUpdateStatus }) {
 
           <div className="p-4 pt-0 space-y-3">
             {nextStatus && nextStatus !== "Completed" && (
-              <button onClick={() => onUpdateStatus(job.id, nextStatus)} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform">
+              <button onClick={() => onUpdateStatus(job.id, nextStatus)} className="w-full bg-[#0B5FFF] text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform">
                 Mark as {nextStatus}
               </button>
             )}
@@ -438,7 +446,7 @@ function UpcomingJobsPage({ upcomingJobs, onUpdateStatus }) {
                 ✓ Complete Job
               </button>
             )}
-            <a href={`tel:${job.customerPhone}`} className="w-full border border-blue-600 text-blue-600 font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
+            <a href={`tel:${job.customerPhone}`} className="w-full border border-[#0B5FFF] text-[#0B5FFF] font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
               📞 Contact Customer
             </a>
           </div>
@@ -480,7 +488,7 @@ function UpcomingJobsPage({ upcomingJobs, onUpdateStatus }) {
             </p>
           </div>
           <div className="grid grid-cols-2 border-t border-slate-100">
-            <button onClick={() => setActiveJob(job.id)} className="py-3 text-sm font-bold text-blue-600 border-r border-slate-100 active:bg-blue-50">
+            <button onClick={() => setActiveJob(job.id)} className="py-3 text-sm font-bold text-[#0B5FFF] border-r border-slate-100 active:bg-blue-50">
               Manage Job →
             </button>
             <a href={`tel:${job.customerPhone}`} className="py-3 text-sm font-bold text-slate-600 text-center block active:bg-slate-50">
@@ -509,7 +517,7 @@ function CompletedJobsPage({ completedJobs }) {
         {completedJobs.length === 0 && <p className="p-4 text-sm text-slate-400">No completed jobs yet.</p>}
         {completedJobs.map((job, i) => (
           <div key={job.id} className={`p-3 grid grid-cols-4 gap-2 items-center text-sm ${i !== completedJobs.length - 1 ? "border-b border-slate-50" : ""}`}>
-            <span className="text-blue-600 font-semibold text-xs">{job.id.slice(0, 8)}</span>
+            <span className="text-[#0B5FFF] font-semibold text-xs">{job.id.slice(0, 8)}</span>
             <span className="text-slate-500 text-xs">{job.date}</span>
             <span className="text-slate-700 text-xs truncate">{(job.serviceType || "").split(" ")[0]}</span>
             <span className="text-emerald-600 font-bold text-xs text-right">${(job.payout || 0).toFixed(0)}</span>
@@ -556,7 +564,7 @@ function EarningsPage({ completedJobs }) {
 function ProfilePage({ tech }) {
   return (
     <div className="pb-24">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white">
+      <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0A2540] p-5 text-white">
         <div className="flex items-center gap-4">
           <Avatar name={`${tech.firstName || ""} ${tech.lastName || ""}`} size="lg" />
           <div>
@@ -652,7 +660,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans" style={{ maxWidth: "430px", margin: "0 auto", position: "relative" }}>
+    <div className="min-h-screen bg-slate-50 font-body" style={{ maxWidth: "430px", margin: "0 auto", position: "relative" }}>
+      <style>{FONT_IMPORT}</style>
       <TopBar
         title={
           page === "home" ? "Spife Clean" : page === "offers" ? "Job Offers" : page === "jobs" ? "My Jobs" : page === "earnings" ? "Earnings" : page === "profile" ? "My Profile" : "Completed Jobs"

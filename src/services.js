@@ -3,6 +3,19 @@
 
 export const SERVICE_CATEGORIES = [
   {
+    category: "Janitorial & Office Cleaning",
+    items: [
+      "Vacuuming", "Mopping", "Dusting", "Trash & recycling removal",
+      "Kitchen/break room sanitization", "Restroom sanitization", "Floor stripping & waxing",
+      "Floor buffing/polishing", "High-touch point disinfecting", "Restroom restocking",
+      "Recurring service contract",
+    ],
+  },
+  {
+    category: "Window Washing",
+    items: ["Interior window washing", "Exterior window washing", "High-rise/exterior glass", "Screen cleaning", "Track & sill detailing"],
+  },
+  {
     category: "Carpet & Rug Services",
     items: [
       "Steam cleaning", "Deep cleaning", "Pre treatment", "Shampoo", "Deodorizing",

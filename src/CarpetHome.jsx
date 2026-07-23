@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Sparkles, ArrowRight, Star, Check, ChevronDown, MapPin, Clock, ShieldCheck,
-  Droplets, PawPrint, Wind as WindIcon, Menu, X, Phone, Crown, Truck,
+  Droplets, PawPrint, Wind as WindIcon, Fan, Menu, X, Phone, Crown, Truck,
   Sofa, Car, Grid3x3, TreePine, Flame,
 } from "lucide-react";
 import { SERVICE_CATEGORIES } from "./services";
+import Client from "./Client.jsx";
 
 /**
- * Spife Clean — Carpet & Rug Division
- * Customer-facing homepage, same layout/interaction system as the
- * residential cleaning homepage, retargeted at the carpet & rug business.
- * Pulls the real service catalog from services.js so it stays in sync
- * with the tech-facing forms.
+ * Spife Clean — Commercial & Residential Janitorial
+ * Customer-facing homepage. General janitorial/office cleaning is the
+ * core offering; carpet, window, upholstery, and the rest of the
+ * specialty catalog are secondary services pulled live from services.js
+ * so this page never drifts from what's actually offered.
  *
- * Design tokens (unchanged from residential):
+ * Design tokens:
  *  - Primary Blue:  #0B5FFF
  *  - Deep Navy:     #0A2540
  *  - Emerald:       #10B981
@@ -98,76 +99,77 @@ function StatusRail({ compact = false, pinnedIndex = null }) {
   );
 }
 
-// ---- Carpet & Rug catalog, sourced live from services.js ----
-const CARPET_CATEGORY = SERVICE_CATEGORIES.find((c) => c.category === "Carpet & Rug Services");
+// ---- Janitorial & Office Cleaning catalog, sourced live from services.js ----
+const JANITORIAL_CATEGORY = SERVICE_CATEGORIES.find((c) => c.category === "Janitorial & Office Cleaning");
 
-// Packaged offerings built from real catalog items. Prices are starting
+// Packaged offerings built from the real catalog. Prices are starting
 // estimates — adjust to your actual rate card, they're not pulled from
 // services.js since that file only tracks service names, not pricing.
 const SERVICES = [
   {
-    icon: Droplets,
-    name: "Standard Steam Cleaning",
-    desc: "Hot water extraction for everyday carpet upkeep, up to 2 rooms.",
-    time: "45–90 min",
-    price: 99,
-    included: ["Pre-treatment", "Steam cleaning", "Deodorizing", "Fast-dry pass"],
-  },
-  {
     icon: Sparkles,
-    name: "Deep Cleaning & Sanitizing",
-    desc: "A full reset for carpets that haven't been touched in a while.",
-    time: "1.5–3 hrs",
-    price: 179,
-    included: ["Everything in Standard", "Sanitizing", "Enzyme treatment", "Scotch guarding"],
+    name: "Standard Janitorial Care",
+    desc: "Routine office upkeep — vacuuming, mopping, dusting, trash & recycling.",
+    time: "1–3 hrs",
+    price: 129,
+    included: ["Vacuuming & mopping", "Dusting all surfaces", "Trash & recycling removal", "Common area tidy-up"],
   },
   {
-    icon: PawPrint,
-    name: "Pet Stain & Odor Treatment",
-    desc: "Targeted enzyme treatment for pet stains and stubborn odors.",
+    icon: Droplets,
+    name: "Kitchen & Restroom Sanitization",
+    desc: "Detailed disinfecting of the highest-touch, highest-risk spaces.",
     time: "1–2 hrs",
-    price: 149,
-    included: ["Stain removal", "Odor removal", "Enzyme treatment", "Deodorizing"],
+    price: 109,
+    included: ["Break room sanitizing", "Restroom deep sanitize", "Restocking", "High-touch point disinfecting"],
+  },
+  {
+    icon: TreePine,
+    name: "Floor Care",
+    desc: "Strip, wax, and buff for floors that see daily foot traffic.",
+    time: "2–4 hrs",
+    price: 199,
+    included: ["Floor stripping & waxing", "Buffing/polishing", "Entryway mat care", "Scuff & scratch treatment"],
   },
   {
     icon: Truck,
-    name: "Rug Pickup, Clean & Delivery",
-    desc: "White-glove care for area rugs — picked up, cleaned off-site, returned.",
-    time: "3–5 day turnaround",
-    price: 129,
-    included: ["Rug pickup & delivery", "Fringe cleaning", "Padding replacement (opt.)", "Rug storage available"],
+    name: "Recurring Office Contract",
+    desc: "Scheduled nightly, weekly, or monthly service for commercial spaces.",
+    time: "Custom schedule",
+    price: 349,
+    included: ["Full janitorial rounds", "Consistent crew", "Monthly deep-clean rotation", "Priority scheduling"],
     premium: true,
   },
 ];
 
-// Remaining Carpet & Rug items become interactive add-ons for the estimate
+// Remaining Janitorial catalog items become interactive add-ons for the estimate
 const ADDON_PRICE_MAP = {
-  "Pre treatment": 15,
-  "Shampoo": 20,
-  "Scotch guarding": 25,
-  "Sanitizing": 20,
-  "Fringe repair": 40,
-  "Stretching": 30,
-  "Padding replacement": 35,
+  "Trash & recycling removal": 15,
+  "High-touch point disinfecting": 25,
+  "Restroom restocking": 15,
+  "Floor buffing/polishing": 35,
+  "Floor stripping & waxing": 45,
 };
 
 const ADDONS = Object.entries(ADDON_PRICE_MAP).map(([name, price]) => ({
-  id: name.toLowerCase().replace(/\s+/g, "-"),
+  id: name.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, ""),
   name,
   price,
 }));
 
-const BASE_SERVICE = { label: "Deep Cleaning & Sanitizing · 2 rooms", price: 179 };
+const BASE_SERVICE = { label: "Standard Janitorial Care · office", price: 129 };
 const FIRST_TIME_DISCOUNT = 20;
 
-// Other Spife divisions, pulled straight from services.js so this section
-// never drifts from what's actually offered.
+// Specialty services — carpet, window, upholstery, and the rest of the
+// catalog — pulled straight from services.js so this section never
+// drifts from what's actually offered.
 const OTHER_DIVISIONS = [
+  { category: "Carpet & Rug Services", icon: Droplets },
+  { category: "Window Washing", icon: WindIcon },
   { category: "Upholstery", icon: Sofa },
-  { category: "Vehicles", icon: Car },
   { category: "Tile & Grout", icon: Grid3x3 },
   { category: "Hardwood Floor", icon: TreePine },
-  { category: "Air Duct", icon: WindIcon },
+  { category: "Vehicles", icon: Car },
+  { category: "Air Duct", icon: Fan },
   { category: "Water & Fire Damage", icon: Flame },
 ]
   .map((d) => {
@@ -177,15 +179,15 @@ const OTHER_DIVISIONS = [
   .filter(Boolean);
 
 const REVIEWS = [
-  { name: "Danielle R.", area: "Bed-Stuy, Brooklyn", text: "Watching the tech's status change to En Route in real time beat the usual guessing game with cleaning services.", stars: 5 },
-  { name: "Marcus T.", area: "Astoria, Queens", text: "Sent our 9x12 wool rug out for pickup-and-clean. Came back looking new, no hauling required.", stars: 5 },
-  { name: "Priya K.", area: "Harlem, Manhattan", text: "Pet stain treatment finally got rid of a smell three other companies couldn't touch.", stars: 4 },
+  { name: "Danielle R.", area: "Bed-Stuy, Brooklyn", text: "Watching our nightly crew's status change to En Route in real time ended the usual guessing game with office cleaning vendors.", stars: 5 },
+  { name: "Marcus T.", area: "Astoria, Queens", text: "Switched our building to Spife for the recurring contract — restrooms and break room are consistently spotless now.", stars: 5 },
+  { name: "Priya K.", area: "Harlem, Manhattan", text: "Booked a one-off floor care visit and added carpet cleaning right from the same estimate. Simple.", stars: 4 },
 ];
 
 const FAQS = [
-  { q: "How long does carpet take to dry?", a: "Most steam-cleaned carpets are dry to the touch within 4–8 hours with fans or good airflow. Our fast-dry pass on Standard and Deep Cleaning packages helps shorten that window further." },
-  { q: "Do you clean area rugs on-site or off-site?", a: "Wall-to-wall carpet is cleaned on-site. Area and specialty rugs (wool, silk, synthetic) are typically picked up, cleaned off-site where we can fully submerge and rinse them, then delivered back." },
-  { q: "Can you get pet odor completely out?", a: "In most cases, yes — our enzyme treatment breaks down the source of the odor rather than masking it. Severe or long-standing padding saturation may need a padding replacement for a full fix, which we'll flag before starting." },
+  { q: "Do you offer recurring service contracts?", a: "Yes — nightly, weekly, or monthly janitorial contracts with a consistent crew assigned to your space. Custom scheduling and priority booking are included with the Recurring Office Contract package." },
+  { q: "Can you combine janitorial service with specialty cleaning?", a: "Yes. Carpet, window washing, upholstery, tile & grout, hardwood floors, air duct, and water & fire damage restoration can all be added to any janitorial visit or bundled into a recurring contract." },
+  { q: "Do you supply your own cleaning products and equipment?", a: "Yes, every technician arrives with commercial-grade supplies and equipment. If your building requires specific green-certified or client-supplied products, let us know in your booking notes." },
   { q: "Are technicians background-checked?", a: "Yes. Every technician completes an identity and background check before being approved to accept jobs on the platform." },
 ];
 
@@ -193,9 +195,10 @@ function Section({ children, className = "" }) {
   return <section className={`px-6 sm:px-10 lg:px-20 ${className}`}>{children}</section>;
 }
 
-export default function CarpetHome() {
+export default function SpifeHome() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const [selectedAddons, setSelectedAddons] = useState(() => new Set(["scotch-guarding", "sanitizing"]));
 
@@ -211,7 +214,26 @@ export default function CarpetHome() {
   const addonsTotal = useMemo(() => activeAddons.reduce((sum, a) => sum + a.price, 0), [activeAddons]);
   const estimateTotal = BASE_SERVICE.price + addonsTotal - FIRST_TIME_DISCOUNT;
 
-  const goToBooking = () => { window.location.href = "/book"; };
+  const goToBooking = () => { setShowDashboard(true); window.scrollTo(0, 0); };
+
+  // Booking + live job tracking happens right here on /carpet — no
+  // separate page. "Back to Carpet Cleaning" returns to the marketing view.
+  if (showDashboard) {
+    return (
+      <div className="min-h-screen bg-[#F7F9FC] font-body">
+        <style>{FONT_IMPORT}</style>
+        <div className="bg-white border-b border-slate-100 px-5 py-3">
+          <button
+            onClick={() => setShowDashboard(false)}
+            className="text-sm font-semibold text-[#0B5FFF] hover:text-blue-700 transition-colors"
+          >
+            ← Back to Spife Clean
+          </button>
+        </div>
+        <Client />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] font-body text-[#111827]">
@@ -226,7 +248,7 @@ export default function CarpetHome() {
             </div>
             <span className="font-display font-semibold text-lg">Spife Clean</span>
             <span className="hidden sm:inline-flex ml-2 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              CARPET &amp; RUG
+              JANITORIAL &amp; OFFICE CLEANING
             </span>
           </div>
 
@@ -277,12 +299,13 @@ export default function CarpetHome() {
               Background-checked techs · Live job tracking
             </div>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] font-semibold leading-[1.1] tracking-tight text-[#0A2540]">
-              Carpet &amp; rug cleaning<br className="hidden sm:block" /> you can{" "}
+              Commercial &amp; residential<br className="hidden sm:block" /> janitorial you can{" "}
               <span className="text-[#0B5FFF]">actually track.</span>
             </h1>
             <p className="mt-5 text-lg text-slate-600 max-w-md">
-              Steam cleaning, pet stain treatment, and white-glove rug pickup —
-              booked in minutes, tracked in real time from "Requested" to "Completed."
+              Office cleaning, restroom sanitization, and floor care — plus carpet,
+              window, and upholstery care when you need it. Booked in minutes,
+              tracked in real time from "Requested" to "Completed."
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button onClick={goToBooking} className="flex items-center gap-2 text-sm font-semibold text-white bg-[#0B5FFF] px-6 py-3.5 rounded-xl hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-200 active:scale-[0.98] transition-all shadow-lg shadow-blue-200">
@@ -309,7 +332,7 @@ export default function CarpetHome() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-xs font-mono text-slate-400">JOB #SP-20871</p>
-                <p className="font-display font-semibold text-[#0A2540]">Deep Cleaning &amp; Sanitizing · 2 rooms</p>
+                <p className="font-display font-semibold text-[#0A2540]">Standard Janitorial Care · office</p>
               </div>
               <div className="flex items-center gap-1 text-xs font-mono text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-live-green" /> LIVE
@@ -328,7 +351,7 @@ export default function CarpetHome() {
                   <MapPin className="w-3 h-3" /> En route · 8 min away
                 </p>
               </div>
-              <span className="font-mono text-sm font-semibold text-[#0B5FFF]">$179</span>
+              <span className="font-mono text-sm font-semibold text-[#0B5FFF]">$129</span>
             </div>
           </div>
         </div>
@@ -355,7 +378,7 @@ export default function CarpetHome() {
             >
               {s.premium && (
                 <div className="absolute -top-3 right-4 flex items-center gap-1 text-[10px] font-mono font-semibold text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-full shadow-sm">
-                  <Crown className="w-3 h-3" /> WHITE GLOVE
+                  <Crown className="w-3 h-3" /> MOST BOOKED
                 </div>
               )}
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-colors duration-300
@@ -464,11 +487,11 @@ export default function CarpetHome() {
               One estimate, no surprises.
             </h2>
             <p className="text-slate-600 max-w-md mb-6">
-              Price is calculated from room count, carpet/rug type, service tier,
+              Price is calculated from square footage, service tier,
               and add-ons — shown up front, before you confirm.
             </p>
             <ul className="space-y-3">
-              {["Number of rooms / rug size", "Carpet, wool, or specialty rug", "Service tier & add-ons", "First-time customer discount"].map((f) => (
+              {["Square footage / room count", "One-time visit or recurring contract", "Service tier & add-ons", "First-time customer discount"].map((f) => (
                 <li key={f} className="flex items-center gap-2 text-sm text-slate-600">
                   <Check className="w-4 h-4 text-emerald-500" /> {f}
                 </li>
@@ -522,7 +545,7 @@ export default function CarpetHome() {
         <div className="max-w-2xl mb-10">
           <p className="text-xs font-mono text-[#0B5FFF] mb-3 tracking-wide">ALSO FROM SPIFE</p>
           <h2 className="font-display text-3xl sm:text-4xl font-semibold text-[#0A2540]">
-            One platform, the whole restoration job.
+            One platform, every service your building needs.
           </h2>
         </div>
 
@@ -589,7 +612,7 @@ export default function CarpetHome() {
       <Section className="py-16 bg-white">
         <div className="bg-[#0B5FFF] rounded-3xl px-8 py-14 text-center text-white">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
-            Book your first carpet cleaning today.
+            Book your first cleaning today.
           </h2>
           <p className="text-blue-100 mb-8 max-w-md mx-auto">
             Live tracking, background-checked techs, no surprise pricing.
@@ -608,7 +631,7 @@ export default function CarpetHome() {
               <Sparkles className="w-3 h-3 text-white" />
             </div>
             <span className="font-display font-medium text-[#0A2540]">Spife Clean</span>
-            <span className="text-slate-300">— Carpet &amp; Rug</span>
+            <span className="text-slate-300">— Janitorial &amp; Office Cleaning</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="#services" className="hover:text-[#0B5FFF]">Services</a>

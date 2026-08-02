@@ -372,12 +372,12 @@ function MyJobs({ customer }) {
 // ============================================================
 
 export default function Client() {
-  const [customer, setCustomer] = useState(null);
+  // TEMP: login gate disabled until new Firebase account is set up.
+  // Using a placeholder guest identity so booking still works for testing.
+  const [customer, setCustomer] = useState({
+    id: "guest", firstName: "Guest", lastName: "", phone: "", email: "",
+  });
   const [tab, setTab] = useState("book");
-
-  if (!customer) {
-    return <LoginScreen onLogin={setCustomer} />;
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" style={{ fontFamily: "system-ui, sans-serif" }}>
